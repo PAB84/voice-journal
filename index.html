@@ -1,0 +1,1285 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#4f46e5">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <title>Voice Journal & Tasks - Android Edition</title>
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Roboto', 'Inter', sans-serif;
+      -webkit-tap-highlight-color: transparent;
+    }
+    @keyframes pulse-ring {
+      0% { transform: scale(0.95); opacity: 0.8; }
+      50% { transform: scale(1.2); opacity: 0.25; }
+      100% { transform: scale(0.95); opacity: 0.8; }
+    }
+    .listening-pulse {
+      animation: pulse-ring 1.8s infinite ease-in-out;
+    }
+  </style>
+</head>
+<body class="bg-slate-100 text-slate-800 min-h-screen flex justify-center selection:bg-indigo-100">
+
+  <!-- Mobile Device Shell for Android Preview -->
+  <div class="w-full max-w-md bg-white min-h-screen shadow-xl flex flex-col relative pb-24">
+
+    <!-- Android Status Bar Simulation -->
+    <div class="bg-indigo-700 text-white px-4 py-1.5 flex items-center justify-between text-xs font-mono tracking-wider select-none">
+      <span id="android-clock">12:00</span>
+      <div class="flex items-center space-x-2 text-[11px]">
+        <span>5G</span>
+        <span>📶</span>
+        <span>🔋 98%</span>
+      </div>
+    </div>
+
+    <!-- Android Material 3 Top App Bar -->
+    <header class="bg-indigo-600 text-white px-4 py-3 shadow-md sticky top-0 z-30 flex items-center justify-between">
+      <div class="flex items-center space-x-3">
+        <div class="w-9 h-9 rounded-full bg-white/20 flex items-center justify-center text-lg">
+          🎙️
+        </div>
+        <div>
+          <h1 class="text-base font-semibold leading-tight">Voice Assistant</h1>
+          <p class="text-[11px] text-indigo-100 font-medium">Android Step 4: Timed Reminders & Alarms</p>
+        </div>
+      </div>
+      <div class="flex items-center space-x-1.5">
+        <button id="guide-toggle-btn" class="px-2.5 py-1 rounded-full bg-white/15 hover:bg-white/25 text-xs font-medium transition flex items-center gap-1">
+          <span>📱</span> Setup Guide
+        </button>
+        <button id="export-backup-btn" class="p-1.5 rounded-full hover:bg-white/20 text-indigo-100 hover:text-white transition" title="Export Backup">
+          💾
+        </button>
+        <button id="clear-all-btn" class="px-2.5 py-1 rounded-full bg-red-500/80 hover:bg-red-500 text-white text-xs font-medium transition">
+          Clear
+        </button>
+      </div>
+    </header>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="fixed top-14 left-1/2 -translate-x-1/2 z-50 transform transition-all duration-300 opacity-0 pointer-events-none bg-slate-900 text-white px-4 py-2 rounded-full shadow-lg text-xs font-medium flex items-center space-x-2 max-w-[90%]">
+      <span id="toast-icon">✨</span>
+      <span id="toast-msg">Notification</span>
+    </div>
+
+    <!-- Main Content Area -->
+    <main class="flex-1 px-4 py-4 space-y-4 overflow-y-auto">
+
+      <!-- Voice Command Cheat Sheet (Expandable Guide) -->
+      <div id="android-guide" class="bg-indigo-50 border border-indigo-200 rounded-2xl p-4 text-xs text-slate-700 space-y-2.5">
+        <div class="flex items-center justify-between">
+          <span class="font-bold text-indigo-900 flex items-center gap-1.5">
+            🗣️ Step 4 Voice Commands & Alarms
+          </span>
+          <button id="close-guide-btn" class="text-indigo-500 hover:text-indigo-800 font-bold px-1 text-sm">✕</button>
+        </div>
+        <p class="text-slate-600 leading-relaxed">
+          Tap the floating mic and say any command naturally:
+        </p>
+        <div class="space-y-1.5 text-slate-700">
+          <div class="bg-white p-2 rounded-xl border border-indigo-100 shadow-2xs">
+            <span class="font-semibold text-indigo-700 block">⏰ Timed Audio Reminder:</span>
+            <code class="text-[11px] text-slate-600">"Remind me to call John in 10 seconds"</code> or <code class="text-[11px] text-slate-600">"Set reminder review notes in 1 minute"</code>
+          </div>
+          <div class="bg-white p-2 rounded-xl border border-indigo-100 shadow-2xs">
+            <span class="font-semibold text-indigo-700 block">🔍 Voice Search:</span>
+            <code class="text-[11px] text-slate-600">"Search meeting"</code> or <code class="text-[11px] text-slate-600">"Find urgent tasks"</code>
+          </div>
+          <div class="bg-white p-2 rounded-xl border border-indigo-100 shadow-2xs">
+            <span class="font-semibold text-indigo-700 block">🏷️ Tagged Tasks:</span>
+            <code class="text-[11px] text-slate-600">"Add urgent task submit budget"</code> or <code class="text-[11px] text-slate-600">"Add work task client sync"</code>
+          </div>
+          <div class="bg-white p-2 rounded-xl border border-indigo-100 shadow-2xs">
+            <span class="font-semibold text-indigo-700 block">📢 Read Pending Tasks:</span>
+            <code class="text-[11px] text-slate-600">"Share pending tasks"</code> (reads count & titles aloud)
+          </div>
+          <div class="bg-white p-2 rounded-xl border border-indigo-100 shadow-2xs">
+            <span class="font-semibold text-indigo-700 block">✅ Complete or Edit:</span>
+            <code class="text-[11px] text-slate-600">"Mark budget as complete"</code> or <code class="text-[11px] text-slate-600">"Delete task budget"</code>
+          </div>
+          <div class="bg-white p-2 rounded-xl border border-indigo-100 shadow-2xs">
+            <span class="font-semibold text-indigo-700 block">📝 Daily Journal Note:</span>
+            <span class="text-[11px] text-slate-600">Any thought without "task", "search", or "remind" auto-saves with a timestamp!</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Live Voice Status Banner -->
+      <div id="voice-banner" class="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm text-center relative overflow-hidden">
+        <div id="mic-pulse-bg" class="hidden absolute inset-0 bg-indigo-500/10 pointer-events-none listening-pulse"></div>
+        <div class="relative z-10">
+          <span id="mic-badge" class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-slate-100 text-slate-600">
+            <span class="w-2 h-2 rounded-full bg-slate-400" id="mic-dot"></span>
+            <span id="mic-status">Ready to listen</span>
+          </span>
+          <p id="mic-subtext" class="text-[11px] text-slate-400 mt-1">Tap the floating mic button or type a thought below.</p>
+
+          <!-- Live transcript box -->
+          <div id="live-transcript-box" class="w-full mt-3 p-3 bg-slate-50 border border-slate-200 rounded-xl text-left hidden">
+            <span class="text-[11px] font-semibold text-indigo-600 uppercase tracking-wider block mb-0.5">Hearing:</span>
+            <p id="live-transcript" class="text-xs text-slate-700 italic">Listening for your voice...</p>
+          </div>
+
+          <!-- Fallback input for keyboard or testing -->
+          <div class="mt-3 flex gap-2">
+            <select id="manual-category-select" class="text-[11px] px-2 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 text-slate-600">
+              <option value="General">📝 General</option>
+              <option value="Work">💼 Work</option>
+              <option value="Personal">🏠 Personal</option>
+              <option value="Urgent">🚨 Urgent</option>
+            </select>
+            <input id="manual-note-input" type="text" placeholder="Type a note or command (e.g. 'Remind me to call John in 15 seconds')..." class="flex-1 px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white transition">
+            <button id="manual-add-btn" class="px-3 py-2 bg-indigo-600 text-white text-xs font-medium rounded-xl hover:bg-indigo-700 transition">
+              Add Note
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Search & Filter Bar -->
+      <div class="bg-white border border-slate-200 rounded-2xl p-3 shadow-xs space-y-2">
+        <div class="relative flex items-center">
+          <span class="absolute left-3 text-slate-400 text-xs">🔍</span>
+          <input id="search-input" type="text" placeholder="Search notes & tasks or say 'Search ...'" class="w-full pl-8 pr-8 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 transition">
+          <button id="search-clear-btn" class="absolute right-2.5 text-slate-400 hover:text-slate-600 hidden text-xs font-bold">✕</button>
+        </div>
+        <div class="flex items-center gap-1.5 overflow-x-auto pb-0.5 text-[11px]">
+          <button data-cat="All" class="category-chip px-2.5 py-1 rounded-lg bg-indigo-600 text-white font-medium transition shrink-0">All</button>
+          <button data-cat="General" class="category-chip px-2.5 py-1 rounded-lg bg-slate-100 text-slate-600 hover:bg-slate-200 font-medium transition shrink-0">📝 General</button>
+          <button data-cat="Work" class="category-chip px-2.5 py-1 rounded-lg bg-slate-100 text-slate-600 hover:bg-slate-200 font-medium transition shrink-0">💼 Work</button>
+          <button data-cat="Personal" class="category-chip px-2.5 py-1 rounded-lg bg-slate-100 text-slate-600 hover:bg-slate-200 font-medium transition shrink-0">🏠 Personal</button>
+          <button data-cat="Urgent" class="category-chip px-2.5 py-1 rounded-lg bg-slate-100 text-slate-600 hover:bg-slate-200 font-medium transition shrink-0">🚨 Urgent</button>
+        </div>
+      </div>
+
+      <!-- Tab Navigation Switcher (Material 3 Segmented Buttons) -->
+      <div class="grid grid-cols-2 p-1 bg-slate-200/80 rounded-xl text-xs font-medium text-slate-600">
+        <button id="tab-journal-btn" class="py-2 rounded-lg bg-white text-indigo-600 font-semibold shadow-xs transition flex items-center justify-center gap-1.5">
+          <span>📖</span> Journal Notes (<span id="journal-tab-count">0</span>)
+        </button>
+        <button id="tab-tasks-btn" class="py-2 rounded-lg hover:text-slate-900 transition flex items-center justify-center gap-1.5">
+          <span>✅</span> Tasks (<span id="task-tab-count">0</span>)
+        </button>
+      </div>
+
+      <!-- VIEW 1: JOURNAL NOTES -->
+      <div id="journal-view" class="space-y-3">
+        <!-- Quick Action Bar -->
+        <div class="flex items-center justify-between px-1">
+          <div class="flex items-center space-x-1.5">
+            <button id="speak-all-btn" class="text-xs font-medium px-3 py-1.5 rounded-lg bg-indigo-100 text-indigo-700 hover:bg-indigo-200 transition flex items-center gap-1">
+              <span>🔊 Read All</span>
+            </button>
+            <span class="text-xs text-slate-500 font-medium">
+              <span id="entry-count">0</span> entries
+            </span>
+          </div>
+          <span class="text-[11px] text-slate-400">Timestamped</span>
+        </div>
+
+        <!-- Entries List -->
+        <div id="entries-list" class="space-y-2.5">
+          <!-- Dynamically rendered -->
+        </div>
+
+        <!-- Empty State -->
+        <div id="empty-state" class="py-12 px-4 text-center bg-white border border-dashed border-slate-200 rounded-2xl">
+          <div class="w-12 h-12 mx-auto rounded-full bg-indigo-50 text-indigo-600 flex items-center justify-center text-2xl mb-2">
+            🎙️
+          </div>
+          <p class="text-xs font-semibold text-slate-700">No journal notes found</p>
+          <p class="text-[11px] text-slate-400 mt-1 max-w-xs mx-auto">
+            Tap the floating microphone button below to record your first voice note.
+          </p>
+        </div>
+      </div>
+
+      <!-- VIEW 2: TASKS VIEW -->
+      <div id="tasks-view" class="space-y-3 hidden">
+        <!-- Tasks Action Bar -->
+        <div class="flex items-center justify-between px-1">
+          <button id="speak-tasks-btn" class="text-xs font-medium px-3 py-1.5 rounded-lg bg-emerald-100 text-emerald-800 hover:bg-emerald-200 transition flex items-center gap-1.5 shadow-2xs">
+            <span>📢</span> Share Pending Tasks
+          </button>
+          <div class="text-[11px] text-slate-500">
+            <span id="pending-count" class="font-bold text-emerald-700">0</span> pending • <span id="completed-count">0</span> done
+          </div>
+        </div>
+
+        <!-- Active Timed Reminders Banner -->
+        <div id="active-reminders-card" class="bg-amber-50 border border-amber-200 rounded-xl p-3 text-xs text-amber-900 hidden space-y-1.5">
+          <div class="flex items-center justify-between font-semibold">
+            <span class="flex items-center gap-1">⏰ Active Reminders (<span id="active-reminders-count">0</span>)</span>
+            <span class="text-[10px] text-amber-700">Audio Alarm Enabled</span>
+          </div>
+          <div id="active-reminders-list" class="space-y-1 text-[11px]">
+            <!-- Rendered dynamically -->
+          </div>
+        </div>
+
+        <!-- Tasks List Container -->
+        <div id="tasks-list" class="space-y-2.5">
+          <!-- Dynamically rendered -->
+        </div>
+
+        <!-- Empty Tasks State -->
+        <div id="tasks-empty-state" class="py-12 px-4 text-center bg-white border border-dashed border-slate-200 rounded-2xl">
+          <div class="w-12 h-12 mx-auto rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center text-2xl mb-2">
+            🎯
+          </div>
+          <p class="text-xs font-semibold text-slate-700">No tasks found</p>
+          <p class="text-[11px] text-slate-400 mt-1 max-w-xs mx-auto">
+            Tap the mic and say: <br><strong class="text-indigo-600">"Remind me to call John in 15 seconds"</strong>
+          </p>
+        </div>
+      </div>
+
+    </main>
+
+    <!-- Android Floating Action Button (FAB) for Mic -->
+    <div class="fixed bottom-6 right-6 z-40 flex flex-col items-end space-y-2">
+      <button id="mic-btn" class="w-16 h-16 rounded-2xl bg-indigo-600 hover:bg-indigo-700 active:scale-95 text-white shadow-xl flex items-center justify-center text-2xl transition transform focus:outline-none focus:ring-4 focus:ring-indigo-300">
+        <span id="mic-icon">🎙️</span>
+      </button>
+    </div>
+
+    <!-- Android Bottom Navigation Bar Simulation -->
+    <nav class="absolute bottom-0 inset-x-0 bg-white border-t border-slate-200 px-6 py-2 flex items-center justify-around text-[10px] text-slate-500 font-medium z-30">
+      <button id="nav-journal-btn" class="flex flex-col items-center text-indigo-600 transition">
+        <span class="text-base">📝</span>
+        <span>Journal</span>
+      </button>
+      <button id="nav-tasks-btn" class="flex flex-col items-center hover:text-indigo-600 transition">
+        <span class="text-base">✅</span>
+        <span>Tasks (Step 2)</span>
+      </button>
+      <button id="nav-info-btn" class="flex flex-col items-center hover:text-indigo-600 transition">
+        <span class="text-base">⚙️</span>
+        <span>Kotlin Code</span>
+      </button>
+    </nav>
+
+    <!-- Task Edit In-Page Modal (No browser prompt) -->
+    <div id="edit-task-modal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-xs z-50 hidden flex items-center justify-center p-4">
+      <div class="bg-white rounded-2xl max-w-sm w-full p-4 shadow-xl space-y-3">
+        <div class="flex items-center justify-between">
+          <h3 class="font-bold text-sm text-slate-900">Edit Task</h3>
+          <button id="cancel-edit-btn" class="text-slate-400 hover:text-slate-600 text-sm font-bold">✕</button>
+        </div>
+        <input id="edit-task-input" type="text" class="w-full px-3 py-2 text-xs border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="Task description...">
+        <div class="flex items-center gap-2">
+          <label class="text-[11px] text-slate-500 font-medium">Category:</label>
+          <select id="edit-task-category" class="text-xs px-2 py-1.5 border border-slate-200 rounded-lg flex-1">
+            <option value="General">📝 General</option>
+            <option value="Work">💼 Work</option>
+            <option value="Personal">🏠 Personal</option>
+            <option value="Urgent">🚨 Urgent</option>
+          </select>
+        </div>
+        <div class="flex justify-end gap-2 pt-1">
+          <button id="cancel-edit-btn-2" class="px-3 py-1.5 text-xs text-slate-600 hover:bg-slate-100 rounded-lg">Cancel</button>
+          <button id="save-edit-btn" class="px-3 py-1.5 text-xs bg-indigo-600 text-white font-medium rounded-lg hover:bg-indigo-700">Save Changes</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal for Kotlin Code / Android Studio Native Source -->
+    <div id="code-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 hidden flex items-center justify-center p-4">
+      <div class="bg-white rounded-2xl max-w-md w-full max-h-[85vh] flex flex-col shadow-2xl overflow-hidden text-xs">
+        <div class="p-4 bg-indigo-600 text-white flex items-center justify-between">
+          <div>
+            <h3 class="font-bold text-sm">Android Studio Native Code (Complete App)</h3>
+            <p class="text-[10px] text-indigo-100">AlarmManager, Notifications & Room Database</p>
+          </div>
+          <button id="close-modal-btn" class="text-white hover:text-indigo-200 font-bold text-base px-2">✕</button>
+        </div>
+        <div class="p-4 overflow-y-auto space-y-3 font-mono text-[11px] text-slate-700 bg-slate-50">
+          <div>
+            <span class="font-bold text-indigo-700">1. Android AlarmManager & Notification Broadcast</span>
+            <pre class="bg-slate-900 text-slate-100 p-2.5 rounded-lg mt-1 overflow-x-auto text-[10px]">class ReminderReceiver : BroadcastReceiver() {
+    override fun onReceive(context: Context, intent: Intent) {
+        val title = intent.getStringExtra("EXTRA_TITLE") ?: "Task Reminder"
+        
+        // 1. Post Android System Notification
+        val notification = NotificationCompat.Builder(context, "reminders_channel")
+            .setSmallIcon(R.drawable.ic_notification)
+            .setContentTitle("⏰ Reminder Alert")
+            .setContentText(title)
+            .setPriority(NotificationCompat.PRIORITY_HIGH)
+            .build()
+        NotificationManagerCompat.from(context).notify(System.currentTimeMillis().toInt(), notification)
+        
+        // 2. Play Audio Chime & Speak out loud
+        val tts = TextToSpeech(context) { status ->
+            if (status == TextToSpeech.SUCCESS) {
+                tts.speak("Reminder alert: $title", TextToSpeech.QUEUE_FLUSH, null, null)
+            }
+        }
+    }
+}</pre>
+          </div>
+          <div>
+            <span class="font-bold text-indigo-700">2. Scheduling Exact Alarms</span>
+            <pre class="bg-slate-900 text-slate-100 p-2.5 rounded-lg mt-1 overflow-x-auto text-[10px]">fun scheduleReminder(context: Context, title: String, triggerAtMillis: Long) {
+    val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
+    val intent = Intent(context, ReminderReceiver::class.java).apply {
+        putExtra("EXTRA_TITLE", title)
+    }
+    val pendingIntent = PendingIntent.getBroadcast(
+        context, title.hashCode(), intent, 
+        PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+    )
+    alarmManager.setExactAndAllowWhileIdle(
+        AlarmManager.RTC_WAKEUP, triggerAtMillis, pendingIntent
+    )
+}</pre>
+          </div>
+        </div>
+        <div class="p-3 bg-white border-t border-slate-200 text-right">
+          <button id="close-modal-footer-btn" class="px-4 py-1.5 bg-indigo-600 text-white rounded-xl text-xs font-medium hover:bg-indigo-700">
+            Got it
+          </button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    // State
+    let entries = [];
+    let tasks = [];
+    let activeReminders = []; // { id, title, targetTime, timerId }
+    let activeTab = 'journal'; // 'journal' or 'tasks'
+    let activeCategory = 'All'; // 'All', 'General', 'Work', 'Personal', 'Urgent'
+    let searchQuery = '';
+    let isListening = false;
+    let recognition = null;
+    let editingTaskId = null;
+
+    // Clock update
+    function updateClock() {
+      const clockEl = document.getElementById('android-clock');
+      const now = new Date();
+      clockEl.textContent = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    }
+    setInterval(updateClock, 1000);
+    updateClock();
+
+    // Web Audio API Synthesized Chime (No sound files required!)
+    function playChimeSound() {
+      try {
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        if (!AudioContext) return;
+        const ctx = new AudioContext();
+        
+        const now = ctx.currentTime;
+        const osc1 = ctx.createOscillator();
+        const osc2 = ctx.createOscillator();
+        const gain = ctx.createGain();
+
+        osc1.type = 'sine';
+        osc1.frequency.setValueAtTime(587.33, now); // D5
+        osc1.frequency.setValueAtTime(880, now + 0.15); // A5
+
+        osc2.type = 'triangle';
+        osc2.frequency.setValueAtTime(1174.66, now + 0.15); // D6
+
+        gain.gain.setValueAtTime(0.2, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 1.2);
+
+        osc1.connect(gain);
+        osc2.connect(gain);
+        gain.connect(ctx.destination);
+
+        osc1.start(now);
+        osc2.start(now + 0.15);
+        osc1.stop(now + 1.2);
+        osc2.stop(now + 1.2);
+      } catch (e) {
+        console.warn('Web Audio error', e);
+      }
+    }
+
+    // LocalStorage
+    function loadData() {
+      try {
+        const storedEntries = localStorage.getItem('android_voice_journal');
+        if (storedEntries) entries = JSON.parse(storedEntries);
+        const storedTasks = localStorage.getItem('android_voice_tasks');
+        if (storedTasks) tasks = JSON.parse(storedTasks);
+      } catch (e) {
+        console.warn('Storage read error', e);
+      }
+    }
+
+    function saveData() {
+      try {
+        localStorage.setItem('android_voice_journal', JSON.stringify(entries));
+        localStorage.setItem('android_voice_tasks', JSON.stringify(tasks));
+      } catch (e) {
+        console.warn('Storage save error', e);
+      }
+    }
+
+    // Android toast
+    function showToast(msg, icon = '✨') {
+      const toast = document.getElementById('toast');
+      const toastMsg = document.getElementById('toast-msg');
+      const toastIcon = document.getElementById('toast-icon');
+      toastMsg.textContent = msg;
+      toastIcon.textContent = icon;
+      toast.classList.remove('opacity-0', 'pointer-events-none');
+      toast.classList.add('opacity-100');
+      setTimeout(() => {
+        toast.classList.remove('opacity-100');
+        toast.classList.add('opacity-0', 'pointer-events-none');
+      }, 2500);
+    }
+
+    // Android TTS
+    function speak(text, onEnd) {
+      if (!('speechSynthesis' in window)) {
+        if (onEnd) onEnd();
+        return;
+      }
+      window.speechSynthesis.cancel();
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.rate = 1.0;
+      utterance.pitch = 1.0;
+      if (onEnd) utterance.onend = onEnd;
+      window.speechSynthesis.speak(utterance);
+    }
+
+    // Interactive Voice Command Processor (Step 4 with Timed Reminders)
+    function processVoiceInput(text) {
+      const raw = text.trim();
+      const lower = raw.toLowerCase();
+
+      // 1. Timed Reminder: "Remind me to call John in 15 seconds", "Set reminder review notes in 2 minutes"
+      const reminderMatch = lower.match(/(?:remind(?:\s+me)?(?:\s+to)?|set\s+reminder(?:\s+for)?)\s+(.+?)\s+in\s+(\d+)\s*(second|seconds|sec|minute|minutes|min|hour|hours)/i);
+      if (reminderMatch) {
+        const reminderText = reminderMatch[1].trim();
+        const amount = parseInt(reminderMatch[2], 10);
+        const unit = reminderMatch[3].toLowerCase();
+        let seconds = amount;
+        if (unit.startsWith('min')) seconds = amount * 60;
+        else if (unit.startsWith('hour')) seconds = amount * 3600;
+
+        scheduleReminder(reminderText, seconds);
+        switchTab('tasks');
+        return;
+      }
+
+      // 2. Search Command: "Search meeting", "Find urgent tasks"
+      if (lower.startsWith('search') || lower.startsWith('find')) {
+        let term = raw.replace(/^(?:search(?:\s+for)?|find)\s+/i, '').trim();
+        if (term) {
+          executeVoiceSearch(term);
+          return;
+        }
+      }
+
+      // 3. Share / Read Pending Tasks
+      if (
+        lower.includes('pending task') ||
+        lower.includes('pending tasks') ||
+        lower.includes('what are my tasks') ||
+        lower.includes('share tasks') ||
+        lower.includes('show tasks') ||
+        lower.includes('read tasks') ||
+        lower.includes('list tasks')
+      ) {
+        switchTab('tasks');
+        sharePendingTasks();
+        return;
+      }
+
+      // 4. Add Task with Category Detection
+      const addTaskMatch = lower.match(/^(?:add|create|new)\s+(?:(urgent|work|personal)\s+)?task\s*(?:called|named|:)?\s*(.+)/i) ||
+                           lower.match(/^task\s*(?:called|named|:)?\s*(.+)/i);
+      if (addTaskMatch) {
+        let detectedCategory = 'General';
+        if (addTaskMatch[1]) {
+          const cat = addTaskMatch[1].toLowerCase();
+          detectedCategory = cat.charAt(0).toUpperCase() + cat.slice(1);
+        } else if (lower.includes('urgent')) {
+          detectedCategory = 'Urgent';
+        } else if (lower.includes('work')) {
+          detectedCategory = 'Work';
+        } else if (lower.includes('personal')) {
+          detectedCategory = 'Personal';
+        }
+
+        const taskTitle = raw.slice(raw.toLowerCase().indexOf(addTaskMatch[addTaskMatch.length - 1])).trim();
+        addTask(taskTitle, detectedCategory);
+        switchTab('tasks');
+        return;
+      }
+
+      // 5. Complete Task
+      if (lower.includes('complete') || lower.includes('done with')) {
+        let target = '';
+        if (lower.includes('mark') && lower.includes('as complete')) {
+          const match = raw.match(/mark\s+(?:task\s+)?(.+?)\s+as\s+complete/i);
+          if (match) target = match[1];
+        } else if (lower.includes('complete task')) {
+          target = raw.replace(/.*complete\s+task\s*/i, '');
+        } else if (lower.includes('done with task')) {
+          target = raw.replace(/.*done\s+with\s+task\s*/i, '');
+        } else if (lower.includes('complete')) {
+          target = raw.replace(/.*complete\s*/i, '');
+        }
+
+        if (target.trim()) {
+          const success = markTaskComplete(target.trim());
+          if (success) {
+            switchTab('tasks');
+            return;
+          }
+        }
+      }
+
+      // 6. Edit Task
+      const editMatch = raw.match(/(?:edit|change)\s+task\s+(.+?)\s+to\s+(.+)/i);
+      if (editMatch) {
+        const oldTarget = editMatch[1].trim();
+        const newTitle = editMatch[2].trim();
+        const success = editTaskVoice(oldTarget, newTitle);
+        if (success) {
+          switchTab('tasks');
+          return;
+        }
+      }
+
+      // 7. Delete Task
+      const deleteMatch = raw.match(/(?:delete|remove)\s+task\s+(.+)/i);
+      if (deleteMatch) {
+        const target = deleteMatch[1].trim();
+        const success = deleteTaskVoice(target);
+        if (success) {
+          switchTab('tasks');
+          return;
+        }
+      }
+
+      // 8. Default: Journal Note
+      let noteCategory = 'General';
+      if (lower.includes('urgent')) noteCategory = 'Urgent';
+      else if (lower.includes('work')) noteCategory = 'Work';
+      else if (lower.includes('personal')) noteCategory = 'Personal';
+
+      addJournalEntry(raw, noteCategory);
+      switchTab('journal');
+    }
+
+    // Step 4: Timed Audio Reminders
+    function scheduleReminder(title, seconds) {
+      const now = Date.now();
+      const targetTime = now + (seconds * 1000);
+      const reminderId = 'rem_' + now;
+
+      // Also create a task for it
+      addTask(`⏰ ${title}`, 'Urgent');
+
+      const timerId = setTimeout(() => {
+        triggerReminderAlarm(title, reminderId);
+      }, seconds * 1000);
+
+      activeReminders.push({
+        id: reminderId,
+        title: title,
+        targetTime: targetTime,
+        timerId: timerId
+      });
+
+      renderReminders();
+      showToast(`Reminder set for ${seconds}s!`, '⏰');
+      speak(`Reminder scheduled: ${title} in ${seconds >= 60 ? Math.round(seconds / 60) + ' minutes' : seconds + ' seconds'}.`);
+    }
+
+    function triggerReminderAlarm(title, reminderId) {
+      // Play bell chime
+      playChimeSound();
+
+      // Audio voice alert
+      setTimeout(() => {
+        speak(`Reminder alert: ${title}! It is time to complete this task.`);
+      }, 500);
+
+      // Remove from active list
+      activeReminders = activeReminders.filter(r => r.id !== reminderId);
+      renderReminders();
+      showToast(`ALARM: ${title}!`, '🔔');
+    }
+
+    function renderReminders() {
+      const card = document.getElementById('active-reminders-card');
+      const countEl = document.getElementById('active-reminders-count');
+      const listEl = document.getElementById('active-reminders-list');
+
+      countEl.textContent = activeReminders.length;
+      if (activeReminders.length === 0) {
+        card.classList.add('hidden');
+        listEl.innerHTML = '';
+        return;
+      }
+
+      card.classList.remove('hidden');
+      listEl.innerHTML = activeReminders.map(r => {
+        const remaining = Math.max(0, Math.round((r.targetTime - Date.now()) / 1000));
+        return `<div class="flex items-center justify-between bg-white/70 px-2 py-1 rounded-md">
+          <span class="font-medium truncate max-w-[200px]">${escapeHtml(r.title)}</span>
+          <span class="font-mono text-[10px] text-amber-800">in ~${remaining}s</span>
+        </div>`;
+      }).join('');
+    }
+
+    // Voice Search
+    function executeVoiceSearch(term) {
+      searchQuery = term;
+      document.getElementById('search-input').value = term;
+      document.getElementById('search-clear-btn').classList.remove('hidden');
+
+      const lower = term.toLowerCase();
+      const matchEntries = entries.filter(e => e.text.toLowerCase().includes(lower) || e.category.toLowerCase().includes(lower));
+      const matchTasks = tasks.filter(t => t.title.toLowerCase().includes(lower) || t.category.toLowerCase().includes(lower));
+
+      renderAll();
+
+      let reply = `Search for ${term} found ${matchTasks.length} tasks and ${matchEntries.length} notes. `;
+      if (matchTasks.length > 0) {
+        reply += `First task: ${matchTasks[0].title}. `;
+      }
+      speak(reply);
+      showToast(`Found ${matchTasks.length} tasks, ${matchEntries.length} notes`, '🔍');
+    }
+
+    // Task Actions
+    function addTask(title, category = 'General') {
+      const now = new Date();
+      const timeStr = now.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
+      const task = {
+        id: Date.now().toString(),
+        title: title,
+        category: category,
+        completed: false,
+        time: timeStr,
+        timestamp: now.getTime()
+      };
+      tasks.unshift(task);
+      saveData();
+      renderAll();
+      showToast(`Added ${category} task!`, '✅');
+      if (!title.startsWith('⏰')) {
+        speak(`Added ${category} task: ${title}.`);
+      }
+    }
+
+    function sharePendingTasks() {
+      const pending = tasks.filter(t => !t.completed);
+      if (pending.length === 0) {
+        const msg = 'You have no pending tasks right now. Great job!';
+        speak(msg);
+        showToast('No pending tasks 🎉', '🎯');
+        return;
+      }
+      let text = `You have ${pending.length} pending ${pending.length === 1 ? 'task' : 'tasks'}: `;
+      pending.forEach((t, i) => {
+        text += `Number ${i + 1}, ${t.category}: ${t.title}. `;
+      });
+      text += 'You can say "Complete task" followed by the name to mark one done.';
+      speak(text);
+      showToast(`Speaking ${pending.length} pending tasks`, '📢');
+    }
+
+    function markTaskComplete(query) {
+      let targetTask = null;
+      const num = parseInt(query, 10);
+      const pending = tasks.filter(t => !t.completed);
+      if (!isNaN(num) && num >= 1 && num <= pending.length) {
+        targetTask = pending[num - 1];
+      } else {
+        targetTask = tasks.find(t => t.title.toLowerCase().includes(query.toLowerCase()));
+      }
+
+      if (targetTask) {
+        targetTask.completed = true;
+        saveData();
+        renderAll();
+        showToast('Task marked complete!', '🎉');
+        speak(`Marked task "${targetTask.title}" as complete!`);
+        return true;
+      } else {
+        speak(`I could not find a task matching "${query}". Here are your pending tasks.`);
+        sharePendingTasks();
+        return false;
+      }
+    }
+
+    function toggleTaskComplete(id) {
+      const task = tasks.find(t => t.id === id);
+      if (!task) return;
+      task.completed = !task.completed;
+      saveData();
+      renderAll();
+      if (task.completed) {
+        showToast('Task completed!', '🎉');
+        speak(`Completed: ${task.title}`);
+      } else {
+        showToast('Task marked pending', '↩️');
+      }
+    }
+
+    function deleteTask(id) {
+      const task = tasks.find(t => t.id === id);
+      const title = task ? task.title : 'Task';
+      tasks = tasks.filter(t => t.id !== id);
+      saveData();
+      renderAll();
+      showToast('Task deleted', '🗑️');
+      speak(`Deleted task: ${title}`);
+    }
+
+    function deleteTaskVoice(query) {
+      const task = tasks.find(t => t.title.toLowerCase().includes(query.toLowerCase()));
+      if (task) {
+        deleteTask(task.id);
+        return true;
+      }
+      speak(`Could not find a task matching "${query}" to delete.`);
+      return false;
+    }
+
+    function editTaskVoice(oldQuery, newTitle) {
+      const task = tasks.find(t => t.title.toLowerCase().includes(oldQuery.toLowerCase()));
+      if (task) {
+        task.title = newTitle;
+        saveData();
+        renderAll();
+        showToast('Task updated!', '✏️');
+        speak(`Updated task to: ${newTitle}`);
+        return true;
+      }
+      speak(`Could not find task "${oldQuery}" to edit.`);
+      return false;
+    }
+
+    function openEditModal(id) {
+      const task = tasks.find(t => t.id === id);
+      if (!task) return;
+      editingTaskId = id;
+      const modal = document.getElementById('edit-task-modal');
+      const input = document.getElementById('edit-task-input');
+      const catSelect = document.getElementById('edit-task-category');
+      input.value = task.title;
+      catSelect.value = task.category || 'General';
+      modal.classList.remove('hidden');
+      input.focus();
+    }
+
+    function closeEditModal() {
+      editingTaskId = null;
+      document.getElementById('edit-task-modal').classList.add('hidden');
+    }
+
+    function saveEditModal() {
+      if (!editingTaskId) return;
+      const input = document.getElementById('edit-task-input');
+      const catSelect = document.getElementById('edit-task-category');
+      const newTitle = input.value.trim();
+      const newCat = catSelect.value;
+      if (newTitle) {
+        const task = tasks.find(t => t.id === editingTaskId);
+        if (task) {
+          task.title = newTitle;
+          task.category = newCat;
+          saveData();
+          renderAll();
+          showToast('Task updated', '✏️');
+          speak(`Updated task: ${newTitle}`);
+        }
+      }
+      closeEditModal();
+    }
+
+    // Journal Note Actions
+    function addJournalEntry(text, category = 'General') {
+      const now = new Date();
+      const dateStr = now.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
+      const timeStr = now.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+
+      const entry = {
+        id: Date.now().toString(),
+        text: text,
+        category: category,
+        date: dateStr,
+        time: timeStr,
+        timestamp: now.getTime()
+      };
+
+      entries.unshift(entry);
+      saveData();
+      renderAll();
+      showToast('Journal note saved', '📝');
+      speak(`Saved note: ${text}`);
+    }
+
+    function deleteJournalEntry(id) {
+      entries = entries.filter(e => e.id !== id);
+      saveData();
+      renderAll();
+      showToast('Note deleted', '🗑️');
+    }
+
+    function readJournalEntry(text) {
+      speak(text);
+    }
+
+    function readAllJournalEntries() {
+      const filtered = getFilteredEntries();
+      if (filtered.length === 0) {
+        speak('You have no matching journal entries.');
+        showToast('No entries to read', 'ℹ️');
+        return;
+      }
+      let textToRead = `You have ${filtered.length} matching journal ${filtered.length === 1 ? 'entry' : 'entries'}. `;
+      filtered.forEach((e, idx) => {
+        textToRead += `Note ${idx + 1}, ${e.category}, recorded at ${e.time}: ${e.text}. `;
+      });
+      speak(textToRead);
+      showToast('Speaking matching entries...', '🔊');
+    }
+
+    // Export Backup Feature
+    function exportBackup() {
+      const data = {
+        appName: 'Android Voice Journal & Tasks',
+        exportedAt: new Date().toISOString(),
+        entries: entries,
+        tasks: tasks
+      };
+      const jsonStr = JSON.stringify(data, null, 2);
+      const blob = new Blob([jsonStr], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `voice_journal_backup_${Date.now()}.json`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      showToast('Backup downloaded!', '💾');
+      speak('Backup file has been generated and downloaded to your device.');
+    }
+
+    // Filtering Helpers
+    function getFilteredEntries() {
+      return entries.filter(e => {
+        const matchesCategory = activeCategory === 'All' || (e.category || 'General') === activeCategory;
+        const matchesSearch = !searchQuery || e.text.toLowerCase().includes(searchQuery.toLowerCase());
+        return matchesCategory && matchesSearch;
+      });
+    }
+
+    function getFilteredTasks() {
+      return tasks.filter(t => {
+        const matchesCategory = activeCategory === 'All' || (t.category || 'General') === activeCategory;
+        const matchesSearch = !searchQuery || t.title.toLowerCase().includes(searchQuery.toLowerCase());
+        return matchesCategory && matchesSearch;
+      });
+    }
+
+    // Badge styling helper
+    function getCategoryBadge(cat) {
+      switch (cat) {
+        case 'Work': return '<span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-blue-50 text-blue-700">💼 Work</span>';
+        case 'Personal': return '<span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-amber-50 text-amber-700">🏠 Personal</span>';
+        case 'Urgent': return '<span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-red-50 text-red-700">🚨 Urgent</span>';
+        default: return '<span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-slate-100 text-slate-600">📝 General</span>';
+      }
+    }
+
+    // Speech Recognition
+    function initSpeechRecognition() {
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      if (!SpeechRecognition) {
+        document.getElementById('mic-status').textContent = 'Voice engine unavailable';
+        document.getElementById('mic-btn').classList.add('opacity-50');
+        return null;
+      }
+
+      const rec = new SpeechRecognition();
+      rec.continuous = false;
+      rec.interimResults = true;
+      rec.lang = 'en-US';
+
+      rec.onstart = () => {
+        isListening = true;
+        document.getElementById('mic-status').textContent = 'Listening on Android...';
+        document.getElementById('mic-icon').textContent = '🔴';
+        document.getElementById('mic-dot').classList.remove('bg-slate-400');
+        document.getElementById('mic-dot').classList.add('bg-red-500');
+        document.getElementById('mic-pulse-bg').classList.remove('hidden');
+        document.getElementById('live-transcript-box').classList.remove('hidden');
+        document.getElementById('live-transcript').textContent = 'Listening...';
+      };
+
+      rec.onresult = (event) => {
+        let transcript = '';
+        for (let i = event.resultIndex; i < event.results.length; i++) {
+          transcript += event.results[i][0].transcript;
+        }
+        document.getElementById('live-transcript').textContent = transcript || 'Listening...';
+
+        if (event.results[0] && event.results[0].isFinal) {
+          const finalVoice = transcript.trim();
+          if (finalVoice.length > 0) {
+            processVoiceInput(finalVoice);
+          }
+        }
+      };
+
+      rec.onerror = (event) => {
+        console.warn('Speech error:', event.error);
+        stopListening();
+        if (event.error === 'not-allowed') {
+          showToast('Mic permission required', '⚠️');
+          document.getElementById('mic-status').textContent = 'Microphone permission blocked';
+        } else {
+          document.getElementById('mic-status').textContent = 'Ready to listen';
+        }
+      };
+
+      rec.onend = () => {
+        stopListening();
+      };
+
+      return rec;
+    }
+
+    function toggleListening() {
+      if (!recognition) {
+        recognition = initSpeechRecognition();
+        if (!recognition) return;
+      }
+
+      if (isListening) {
+        recognition.stop();
+        stopListening();
+      } else {
+        try {
+          recognition.start();
+        } catch (err) {
+          console.warn('Recognition start failed', err);
+        }
+      }
+    }
+
+    function stopListening() {
+      isListening = false;
+      document.getElementById('mic-status').textContent = 'Ready to listen';
+      document.getElementById('mic-icon').textContent = '🎙️';
+      document.getElementById('mic-dot').classList.remove('bg-red-500');
+      document.getElementById('mic-dot').classList.add('bg-slate-400');
+      document.getElementById('mic-pulse-bg').classList.add('hidden');
+      setTimeout(() => {
+        document.getElementById('live-transcript-box').classList.add('hidden');
+      }, 1000);
+    }
+
+    // Switch Tabs
+    function switchTab(tab) {
+      activeTab = tab;
+      const journalView = document.getElementById('journal-view');
+      const tasksView = document.getElementById('tasks-view');
+      const tabJournalBtn = document.getElementById('tab-journal-btn');
+      const tabTasksBtn = document.getElementById('tab-tasks-btn');
+      const navJournalBtn = document.getElementById('nav-journal-btn');
+      const navTasksBtn = document.getElementById('nav-tasks-btn');
+
+      if (tab === 'journal') {
+        journalView.classList.remove('hidden');
+        tasksView.classList.add('hidden');
+        tabJournalBtn.classList.add('bg-white', 'text-indigo-600', 'font-semibold', 'shadow-xs');
+        tabTasksBtn.classList.remove('bg-white', 'text-indigo-600', 'font-semibold', 'shadow-xs');
+        navJournalBtn.classList.add('text-indigo-600');
+        navTasksBtn.classList.remove('text-indigo-600');
+      } else {
+        journalView.classList.add('hidden');
+        tasksView.classList.remove('hidden');
+        tabTasksBtn.classList.add('bg-white', 'text-indigo-600', 'font-semibold', 'shadow-xs');
+        tabJournalBtn.classList.remove('bg-white', 'text-indigo-600', 'font-semibold', 'shadow-xs');
+        navTasksBtn.classList.add('text-indigo-600');
+        navJournalBtn.classList.remove('text-indigo-600');
+      }
+    }
+
+    // Render Lists
+    function renderAll() {
+      const filteredEntries = getFilteredEntries();
+      const filteredTasks = getFilteredTasks();
+
+      // 1. Journal entries
+      const listEl = document.getElementById('entries-list');
+      const emptyEl = document.getElementById('empty-state');
+      const countEl = document.getElementById('entry-count');
+      const tabCountEl = document.getElementById('journal-tab-count');
+
+      countEl.textContent = filteredEntries.length;
+      tabCountEl.textContent = entries.length;
+
+      if (filteredEntries.length === 0) {
+        listEl.innerHTML = '';
+        emptyEl.classList.remove('hidden');
+      } else {
+        emptyEl.classList.add('hidden');
+        listEl.innerHTML = filteredEntries.map(item => `
+          <div class="bg-white border border-slate-200 rounded-xl p-3.5 shadow-xs hover:border-indigo-200 transition flex items-start justify-between gap-3">
+            <div class="flex-1 min-w-0">
+              <div class="flex items-center gap-1.5 mb-1 flex-wrap">
+                <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-medium bg-indigo-50 text-indigo-700">
+                  🕒 ${item.date} • ${item.time}
+                </span>
+                ${getCategoryBadge(item.category || 'General')}
+              </div>
+              <p class="text-xs text-slate-800 break-words leading-relaxed">${escapeHtml(item.text)}</p>
+            </div>
+            <div class="flex items-center gap-1 shrink-0">
+              <button data-action="speak-journal" data-id="${item.id}" title="Speak note" class="p-1.5 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition">
+                🔊
+              </button>
+              <button data-action="delete-journal" data-id="${item.id}" title="Delete note" class="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition">
+                🗑️
+              </button>
+            </div>
+          </div>
+        `).join('');
+      }
+
+      // 2. Tasks
+      const tasksListEl = document.getElementById('tasks-list');
+      const tasksEmptyEl = document.getElementById('tasks-empty-state');
+      const taskTabCount = document.getElementById('task-tab-count');
+      const pendingCountEl = document.getElementById('pending-count');
+      const completedCountEl = document.getElementById('completed-count');
+
+      const pending = tasks.filter(t => !t.completed);
+      const completed = tasks.filter(t => t.completed);
+
+      taskTabCount.textContent = tasks.length;
+      pendingCountEl.textContent = pending.length;
+      completedCountEl.textContent = completed.length;
+
+      if (filteredTasks.length === 0) {
+        tasksListEl.innerHTML = '';
+        tasksEmptyEl.classList.remove('hidden');
+      } else {
+        tasksEmptyEl.classList.add('hidden');
+        tasksListEl.innerHTML = filteredTasks.map(t => `
+          <div class="bg-white border ${t.completed ? 'border-slate-200 bg-slate-50/60 opacity-80' : 'border-slate-200'} rounded-xl p-3 shadow-xs transition flex items-center justify-between gap-2.5">
+            <div class="flex items-center gap-2.5 flex-1 min-w-0">
+              <button data-action="toggle-task" data-id="${t.id}" class="w-5 h-5 rounded-lg border ${t.completed ? 'bg-emerald-600 border-emerald-600 text-white' : 'border-slate-300 hover:border-indigo-500'} flex items-center justify-center shrink-0 transition text-xs">
+                ${t.completed ? '✓' : ''}
+              </button>
+              <div class="flex-1 min-w-0">
+                <div class="flex items-center gap-1.5 mb-0.5 flex-wrap">
+                  ${getCategoryBadge(t.category || 'General')}
+                  <span class="text-[10px] text-slate-400">🕒 ${t.time}</span>
+                </div>
+                <span class="text-xs ${t.completed ? 'line-through text-slate-400 font-normal' : 'text-slate-800 font-medium'} break-words block leading-snug">
+                  ${escapeHtml(t.title)}
+                </span>
+              </div>
+            </div>
+            <div class="flex items-center gap-1 shrink-0">
+              <button data-action="edit-task" data-id="${t.id}" title="Edit task" class="p-1.5 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition">
+                ✏️
+              </button>
+              <button data-action="delete-task" data-id="${t.id}" title="Delete task" class="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition">
+                🗑️
+              </button>
+            </div>
+          </div>
+        `).join('');
+      }
+
+      renderReminders();
+    }
+
+    function escapeHtml(str) {
+      return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+
+    // Listeners
+    document.addEventListener('DOMContentLoaded', () => {
+      loadData();
+      renderAll();
+
+      document.getElementById('mic-btn').addEventListener('click', toggleListening);
+
+      // Manual input
+      const manualInput = document.getElementById('manual-note-input');
+      const manualCatSelect = document.getElementById('manual-category-select');
+      const manualBtn = document.getElementById('manual-add-btn');
+
+      const submitManual = () => {
+        const val = manualInput.value.trim();
+        const cat = manualCatSelect.value;
+        if (val) {
+          if (
+            val.toLowerCase().startsWith('add task') || 
+            val.toLowerCase().startsWith('new task') ||
+            val.toLowerCase().includes('remind') ||
+            val.toLowerCase().startsWith('search')
+          ) {
+            processVoiceInput(val);
+          } else if (activeTab === 'tasks') {
+            addTask(val, cat);
+          } else {
+            addJournalEntry(val, cat);
+          }
+          manualInput.value = '';
+        }
+      };
+      manualBtn.addEventListener('click', submitManual);
+      manualInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') submitManual();
+      });
+
+      // Search listeners
+      const searchInput = document.getElementById('search-input');
+      const searchClearBtn = document.getElementById('search-clear-btn');
+
+      searchInput.addEventListener('input', () => {
+        searchQuery = searchInput.value.trim();
+        if (searchQuery) {
+          searchClearBtn.classList.remove('hidden');
+        } else {
+          searchClearBtn.classList.add('hidden');
+        }
+        renderAll();
+      });
+
+      searchClearBtn.addEventListener('click', () => {
+        searchInput.value = '';
+        searchQuery = '';
+        searchClearBtn.classList.add('hidden');
+        renderAll();
+      });
+
+      // Category chip filters
+      document.querySelectorAll('.category-chip').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          document.querySelectorAll('.category-chip').forEach(c => {
+            c.classList.remove('bg-indigo-600', 'text-white');
+            c.classList.add('bg-slate-100', 'text-slate-600');
+          });
+          e.target.classList.remove('bg-slate-100', 'text-slate-600');
+          e.target.classList.add('bg-indigo-600', 'text-white');
+          activeCategory = e.target.dataset.cat;
+          renderAll();
+          showToast(`Filtered by ${activeCategory}`, '🏷️');
+        });
+      });
+
+      // Export Backup
+      document.getElementById('export-backup-btn').addEventListener('click', exportBackup);
+
+      // Speak all journal & clear all
+      document.getElementById('speak-all-btn').addEventListener('click', readAllJournalEntries);
+      document.getElementById('speak-tasks-btn').addEventListener('click', sharePendingTasks);
+
+      document.getElementById('clear-all-btn').addEventListener('click', () => {
+        if (activeTab === 'journal') {
+          if (entries.length === 0) return;
+          entries = [];
+          saveData();
+          renderAll();
+          speak('All journal entries have been cleared.');
+          showToast('Journal notes cleared', '🧹');
+        } else {
+          if (tasks.length === 0) return;
+          tasks = [];
+          saveData();
+          renderAll();
+          speak('All tasks have been cleared.');
+          showToast('Tasks cleared', '🧹');
+        }
+      });
+
+      // Guide toggle
+      const guideEl = document.getElementById('android-guide');
+      document.getElementById('guide-toggle-btn').addEventListener('click', () => {
+        guideEl.classList.toggle('hidden');
+      });
+      document.getElementById('close-guide-btn').addEventListener('click', () => {
+        guideEl.classList.add('hidden');
+      });
+
+      // Tabs switching
+      document.getElementById('tab-journal-btn').addEventListener('click', () => switchTab('journal'));
+      document.getElementById('tab-tasks-btn').addEventListener('click', () => switchTab('tasks'));
+      document.getElementById('nav-journal-btn').addEventListener('click', () => switchTab('journal'));
+      document.getElementById('nav-tasks-btn').addEventListener('click', () => switchTab('tasks'));
+
+      // Modal for Kotlin code
+      const codeModal = document.getElementById('code-modal');
+      const openModal = () => codeModal.classList.remove('hidden');
+      const closeModal = () => codeModal.classList.add('hidden');
+      document.getElementById('nav-info-btn').addEventListener('click', openModal);
+      document.getElementById('close-modal-btn').addEventListener('click', closeModal);
+      document.getElementById('close-modal-footer-btn').addEventListener('click', closeModal);
+
+      // In-page Edit Modal
+      document.getElementById('cancel-edit-btn').addEventListener('click', closeEditModal);
+      document.getElementById('cancel-edit-btn-2').addEventListener('click', closeEditModal);
+      document.getElementById('save-edit-btn').addEventListener('click', saveEditModal);
+      document.getElementById('edit-task-input').addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') saveEditModal();
+      });
+
+      // Delegation for Journal List
+      document.getElementById('entries-list').addEventListener('click', (e) => {
+        const btn = e.target.closest('button[data-action]');
+        if (!btn) return;
+        const action = btn.dataset.action;
+        const id = btn.dataset.id;
+        const entry = entries.find(item => item.id === id);
+
+        if (action === 'speak-journal' && entry) {
+          readJournalEntry(entry.text);
+        } else if (action === 'delete-journal') {
+          deleteJournalEntry(id);
+        }
+      });
+
+      // Delegation for Tasks List
+      document.getElementById('tasks-list').addEventListener('click', (e) => {
+        const btn = e.target.closest('button[data-action]');
+        if (!btn) return;
+        const action = btn.dataset.action;
+        const id = btn.dataset.id;
+
+        if (action === 'toggle-task') {
+          toggleTaskComplete(id);
+        } else if (action === 'edit-task') {
+          openEditModal(id);
+        } else if (action === 'delete-task') {
+          deleteTask(id);
+        }
+      });
+    });
+  </script>
+</body>
+</html>
